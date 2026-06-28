@@ -12,6 +12,7 @@ interface AdminHallProps {
   setSchedule: (s: Schedule) => void;
   onUpdateStatus: (id: string, status: BookingStatus) => void;
   onAddBooking: (b: Booking) => void;
+  onDeleteBooking: (id: string) => void;
 }
 
 export default function AdminHall({
@@ -20,6 +21,7 @@ export default function AdminHall({
   setSchedule,
   onUpdateStatus,
   onAddBooking,
+  onDeleteBooking,
 }: AdminHallProps) {
   const [adminDate, setAdminDate] = useState(todayISO());
   const [adminTab, setAdminTab] = useState<'agendamentos' | 'horarios'>('agendamentos');
@@ -28,6 +30,7 @@ export default function AdminHall({
   const [search, setSearch] = useState('');
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [showNewBooking, setShowNewBooking] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const filteredBookings = useMemo(() => {
     return bookings
@@ -88,6 +91,18 @@ export default function AdminHall({
     bookings
       .filter((b) => b.clientPhone === phone && b.status !== 'cancelado')
       .sort((a, b) => b.date.localeCompare(a.date));
+
+  const handleDeleteClick = () => {
+    if (!selectedBooking) return;
+    setConfirmingDelete(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!selectedBooking) return;
+    onDeleteBooking(selectedBooking.id);
+    setSelectedBookingId(null);
+    setConfirmingDelete(false);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-10">
@@ -409,6 +424,36 @@ export default function AdminHall({
                           Cancelar
                         </button>
                       </div>
+
+                      {/* Botão de excluir, com confirmação antes */}
+                      {!confirmingDelete ? (
+                        <button
+                          onClick={handleDeleteClick}
+                          className="w-full rounded-xl border border-[#e3c5b8] py-2 text-[12.6px] font-bold text-[#8a3a22] bg-white hover:bg-[#fdf2ee] transition mt-1"
+                        >
+                          Excluir agendamento
+                        </button>
+                      ) : (
+                        <div className="mt-1 rounded-xl border border-[#f0c8b8] bg-[#fdf2ee] px-3 py-3">
+                          <div className="text-[12.6px] font-bold text-[#8a3a22] mb-2">
+                            Excluir definitivamente? Não pode ser desfeito.
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => setConfirmingDelete(false)}
+                              className="rounded-lg py-1.5 text-[12.3px] font-bold text-[#6d5e4a] bg-white border border-[#e3d4bb]"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              onClick={handleConfirmDelete}
+                              className="rounded-lg py-1.5 text-[12.3px] font-bold text-white bg-[#b64a2c] hover:brightness-105"
+                            >
+                              Sim, excluir
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Client history */}
@@ -444,13 +489,7 @@ export default function AdminHall({
 
           <div className="mt-8 text-[12.2px] text-[#99836a] flex flex-wrap gap-5">
             <span>✓ Agendamentos da página Cliente caem aqui automaticamente</span>
-            <span>✓ Dados salvos localmente (localStorage)</span>
-            <span>
-              ✓ Exporte via copiar JSON no console:{' '}
-              <code className="bg-[#f3e9d6] px-1.5 py-0.5 rounded text-[11.5px]">
-                localStorage.getItem('daiane_bookings_v2')
-              </code>
-            </span>
+            <span>✓ Dados sincronizados via Supabase</span>
           </div>
         </>
       )}
