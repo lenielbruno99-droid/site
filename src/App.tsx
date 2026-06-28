@@ -113,6 +113,21 @@ export default function App() {
     await fetchBookings();
   };
 
+  // Remove definitivamente um agendamento do Supabase
+  const handleDeleteBooking = async (id: string) => {
+    const { error } = await supabase
+      .from('agendamentos')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert('Erro ao excluir agendamento.');
+      console.error(error);
+      return;
+    }
+    await fetchBookings();
+  };
+
   const handleScheduleChange = (s: Schedule) => {
     setSchedule(s);
     saveSchedule(s);
@@ -190,6 +205,7 @@ export default function App() {
           setSchedule={handleScheduleChange}
           onUpdateStatus={handleUpdateStatus}
           onAddBooking={handleAddBooking}
+          onDeleteBooking={handleDeleteBooking}
         />
       )}
 
